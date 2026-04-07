@@ -170,8 +170,13 @@ def main():
         💡 <b>How This Works:</b> Fetches real news, analyzes credibility based on source & content, 
         generates AI summaries with Gemini, and detects sentiment. Always verify with official sources!
 
+        
+
         🔐 <b>Privacy:</b> Searches not stored. Real-time processing only.
         </div>
         """,
         unsafe_allow_html=True
+
     )
+    if __name__ == "__main__":
+    main()
