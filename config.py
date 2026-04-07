@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+NEWSAPI_KEY = "97d1ce085bfd40baa38cee73971a7450"
+GEMINI_KEY = "AIzaSyBu96_INxp-Q931g8D8IP_-Q2jtnDZzSQM"
+
+
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
 
