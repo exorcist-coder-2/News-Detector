@@ -39,23 +39,82 @@ def check_fact(claim):
     except ImportError as e:
         return None, f"❌ Google Gemini package not installed: {e}"
 
-    if "429" in str(gemini_error) or "quota" in str(gemini_error).lower():
-    try:
-        import wikipedia
-        search_results = wikipedia.search(claim, results=1)
-        if search_results:
-            page = wikipedia.page(search_results[0])
-            summary = page.summary[:300]
-            return [ {
-                "claim": claim,
-                "rating": "WIKIPEDIA_MATCH",
-                "explanation": f"Wikipedia: {summary}...",
-                "confidence": "MEDIUM",
-                "source": f"Wikipedia: {page.title}"
-            } ], None
-    except Exception:
-        pass
+    # Use Wikipedia if GEMINI_KEY missing
+    if not config.GEMINI_KEY:
+        try:
+            import wikipedia
+            search_results = wikipedia.search(claim, results=1)
+            if search_results:
+                page = wikipedia.page(search_results[0])
+                summary = page.summary[:300]
+                return [{
+                    "claim": claim,
+                    "rating": "WIKIPEDIA_MATCH",
+                    "explanation": f"Wikipedia: {summary}...",
+                    "confidence": "MEDIUM",
+                    "source": f"Wikipedia: {page.title}"
+                }], None
+        except Exception:
+            return None, "⚠️ Gemini key missing and Wikipedia fallback failed."
 
+    # Try Gemini
+    try:
+        genai.configure(api_key=config.GEMINI_KEY)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        prompt = f"""You are a fact-checking expert. Analyze this claim.
+
+CLAIM: {claim}
+
+Respond in EXACT format:
+RATING: [TRUE/FALSE/MIXED/INCONCLUSIVE]
+EXPLANATION: [2-3 sentences]
+CONFIDENCE: [HIGH/MEDIUM/LOW]"""
+        response = model.generate_content(prompt, stream=False)
+        result_text = response.text.strip()
+
+        lines = result_text.split('\n')
+        result = {
+            "claim": claim,
+            "rating": "INCONCLUSIVE",
+            "explanation": result_text,
+            "confidence": "UNKNOWN",
+            "source": "Gemini AI"
+        }
+
+        for line in lines:
+            if line.startswith("RATING:"):
+                result["rating"] = line.replace("RATING:", "").strip()
+            elif line.startswith("EXPLANATION:"):
+                result["explanation"] = line.replace("EXPLANATION:", "").strip()
+            elif line.startswith("CONFIDENCE:"):
+                result["confidence"] = line.replace("CONFIDENCE:", "").strip()
+
+        return [result], None
+
+    except Exception as gemini_error:
+        # Fallback to Wikipedia if quota exceeded
+        error_msg = str(gemini_error).lower()
+        if "429" in error_msg or "quota" in error_msg:
+            try:
+                import wikipedia
+                search_results = wikipedia.search(claim, results=1)
+                if search_results:
+                    page = wikipedia.page(search_results[0])
+                    summary = page.summary[:300]
+                    return [{
+                        "claim": claim,
+                        "rating": "WIKIPEDIA_MATCH",
+                        "explanation": f"Wikipedia: {summary}...",
+                        "confidence": "MEDIUM",
+                        "source": f"Wikipedia: {page.title}"
+                    }], None
+            except Exception:
+                return None, "⚠️ Gemini quota exceeded and Wikipedia fallback failed."
+
+        elif "401" in error_msg:
+            return None, "⚠️ Gemini API key invalid. Please check .env file."
+        else:
+            return None, f"❌ Error: {gemini_error}"
     try:
         genai.configure(api_key=config.GEMINI_KEY)
         model = genai.GenerativeModel('gemini-2.0-flash')
