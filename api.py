@@ -5,7 +5,7 @@ from textblob import TextBlob
 import config
 
 
-def fetch_news(query, days=7):
+def fetch_news(query, days=2):
     if not config.NEWSAPI_KEY:
         return None, "❌ NewsAPI key not found! Please set NEWSAPI_KEY environment variable."
 
@@ -17,7 +17,7 @@ def fetch_news(query, days=7):
             "from": from_date,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 15,
+            "pageSize": 10,
             "apiKey": config.NEWSAPI_KEY
         }
 
