@@ -15,7 +15,7 @@ def main():
     )
 
     st.write("App loaded successfully")
-    # inject_css()
+    inject_css()
 
     if 'articles_cache' not in st.session_state:
         st.session_state.articles_cache = None
