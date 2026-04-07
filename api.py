@@ -38,7 +38,7 @@ def check_fact(claim):
     except ImportError as e:
         return None, f"❌ Google Gemini package not installed: {e}"
 
-    if not config.GEMINI_KEY:
+    if "429" in str(gemini_error) or "quota" in str(gemini_error).lower():
     try:
         import wikipedia
         search_results = wikipedia.search(claim, results=1)
@@ -53,7 +53,7 @@ def check_fact(claim):
                 "source": f"Wikipedia: {page.title}"
             } ], None
     except Exception:
-        return None, "⚠️ Gemini key missing and Wikipedia fallback failed."
+        pass
 
     try:
         genai.configure(api_key=config.GEMINI_KEY)
