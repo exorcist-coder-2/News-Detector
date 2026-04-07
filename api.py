@@ -39,7 +39,21 @@ def check_fact(claim):
         return None, f"❌ Google Gemini package not installed: {e}"
 
     if not config.GEMINI_KEY:
-        return None, "⚠️ Gemini API key not configured. Using Wikipedia instead..."
+    try:
+        import wikipedia
+        search_results = wikipedia.search(claim, results=1)
+        if search_results:
+            page = wikipedia.page(search_results[0])
+            summary = page.summary[:300]
+            return [ {
+                "claim": claim,
+                "rating": "WIKIPEDIA_MATCH",
+                "explanation": f"Wikipedia: {summary}...",
+                "confidence": "MEDIUM",
+                "source": f"Wikipedia: {page.title}"
+            } ], None
+    except Exception:
+        return None, "⚠️ Gemini key missing and Wikipedia fallback failed."
 
     try:
         genai.configure(api_key=config.GEMINI_KEY)
