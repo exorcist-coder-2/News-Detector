@@ -157,7 +157,7 @@ def process_articles(articles, use_gemini=True):
         url = article.get("url", "")
         published = article.get("publishedAt", "N/A")
 
-        from .credibility import get_credibility_score
+        from credibility import get_credibility_score
         credibility, color = get_credibility_score(source, full_content)
         sentiment, polarity = get_sentiment(full_content)
 
