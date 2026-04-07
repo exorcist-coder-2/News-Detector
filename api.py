@@ -39,12 +39,15 @@ def check_fact(claim):
     except ImportError:
         genai = None
 
-    import wikipedia
+    try:
+        import wikipedia
+    except ImportError:
+        return None, "❌ Wikipedia library not installed. Run: pip install wikipedia"
 
     # Helper to try Wikipedia
     def wikipedia_fallback():
         try:
-            search_results = wikipedia.search(claim, results=3)  # try top 3
+            search_results = wikipedia.search(claim, results=3)
             if search_results:
                 page = wikipedia.page(search_results[0])
                 summary = page.summary[:300]
@@ -54,16 +57,17 @@ def check_fact(claim):
                     "explanation": f"Wikipedia: {summary}...",
                     "confidence": "MEDIUM",
                     "source": f"Wikipedia: {page.title}"
-                }]
-        except Exception:
-            pass
+                }], None  # ← Return tuple with error=None
+        except Exception as e:
+            return None, f"Wikipedia error: {str(e)}"
+        
         return [{
             "claim": claim,
             "rating": "UNVERIFIED",
             "explanation": "Could not verify this claim via Gemini or Wikipedia.",
             "confidence": "LOW",
             "source": "None"
-        }]
+        }], None  # ← Return tuple with error=None
 
     # Try Gemini if available
     if genai and config.GEMINI_KEY:
@@ -98,7 +102,7 @@ CONFIDENCE: [HIGH/MEDIUM/LOW]"""
                 elif line.startswith("CONFIDENCE:"):
                     result["confidence"] = line.replace("CONFIDENCE:", "").strip()
 
-            return [result]
+            return [result], None  # ← Return tuple with error=None
 
         except Exception as gemini_error:
             # If Gemini fails, fallback to Wikipedia
