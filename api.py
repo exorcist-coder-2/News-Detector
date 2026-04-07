@@ -106,31 +106,7 @@ CONFIDENCE: [HIGH/MEDIUM/LOW]"""
     else:
         # No Gemini key, fallback to Wikipedia
         return wikipedia_fallback()
-
-    except Exception as gemini_error:
-        # Fallback to Wikipedia if quota exceeded
-        error_msg = str(gemini_error).lower()
-        if "429" in error_msg or "quota" in error_msg:
-            try:
-                import wikipedia
-                search_results = wikipedia.search(claim, results=1)
-                if search_results:
-                    page = wikipedia.page(search_results[0])
-                    summary = page.summary[:300]
-                    return [{
-                        "claim": claim,
-                        "rating": "WIKIPEDIA_MATCH",
-                        "explanation": f"Wikipedia: {summary}...",
-                        "confidence": "MEDIUM",
-                        "source": f"Wikipedia: {page.title}"
-                    }], None
-            except Exception:
-                return None, "⚠️ Gemini quota exceeded and Wikipedia fallback failed."
-
-        elif "401" in error_msg:
-            return None, "⚠️ Gemini API key invalid. Please check .env file."
-        else:
-            return None, f"❌ Error: {gemini_error}"
+        
 
 def summarize_with_gemini(content, title):
     if not config.GEMINI_KEY:
