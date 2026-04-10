@@ -1,7 +1,4 @@
-"""
-Hybrid Fact Checker - Google Fact Check Tools API with Gemini AI Fallback
-Deprecated: Use api.py FactChecker class instead. Kept for backward compatibility.
-"""
+
 
 import os
 import requests
